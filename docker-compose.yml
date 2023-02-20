@@ -1,0 +1,54 @@
+version: '3'
+services:
+  teleusdt:
+    depends_on:
+     - redis_server_usdt
+     - db_usdt
+    #image: huiwushi/teletrx:latest  #old version  
+    image: huiwushi/telewebusdt:latest 
+    container_name: teleusdt
+    volumes:
+     - ./key.data:/root/svr/telesvr/key.data:rw
+     - ./env.conf:/root/svr/telesvr/env.conf:rw
+    ports:
+     - "2099:8232"
+    restart: always
+    environment:
+     REDIS_NAME: redis_server_usdt
+
+  redis_server_usdt:
+    image: redis:latest
+    restart: always
+    container_name: redis_server_usdt
+    volumes:
+      - ./redis.conf:/etc/redis/redis.conf:rw
+    command: redis-server /etc/redis/redis.conf
+    privileged: true
+    
+  db_usdt:
+    image: mysql:5.7
+    container_name: db_usdt
+    volumes:
+     - ./db:/var/lib/mysql
+     - ./mysql_init:/docker-entrypoint-initdb.d/
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: zhujiXYZ1254 
+      MYSQL_DATABASE: trx 
+      MYSQL_USER: mytest
+      MYSQL_PASSWORD: zhujiXYZ1254 
+
+  nginx_usdt:
+    depends_on:
+     - teleusdt
+    container_name: nginx_usdt
+    image: nginx
+    restart: always
+    ports:
+      - 4001:80
+      - 4443:443
+    privileged: true
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./html:/usr/share/nginx/html
+      - ./logs:/var/log/nginx
